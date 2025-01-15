@@ -51,3 +51,29 @@ Why Choose Xiao Ming?
 Whether you're preparing for exams, improving your conversational skills, or just exploring the Chinese language, Xiao Ming is your go-to companion for mastering Chinese in a way that’s practical, engaging, and effective. Start chatting with Xiao Ming today and take your Chinese skills to the next level!
 
 你准备好了吗？(Are you ready?) Let’s learn together! 😊
+
+
+Installation: 
+
+
+   > pip install -r requirements.txt
+
+   Substitute `pip` for `pip3` if you have problems with this.
+
+1. Type the following terminal commands to create the necessary secrets file. Not having this will result in an error.
+
+   > mkdir .streamlit
+
+   > touch .streamlit/secrets.toml
+
+   > echo "COHERE_API_KEY = 'PASTE YOUR API KEY HERE'" > .streamlit/secrets.toml
+
+4. Run the app by typing the following command in the terminal window. 
+   > streamlit run chatbot.py
+   
+   A new browser window will open where you can interact with the chatbot.
+
+> [!NOTE]
+> If you didn't paste a valid Cohere API key into your secrets file you will need to enter it into the sidebar for the chatbot to work.
+
+5. Make minor changes to the code, save and then run your app again to see what happens.
