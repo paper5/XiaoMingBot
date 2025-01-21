@@ -5,7 +5,17 @@ from elevenlabs import *
 #from elevenlabs.api.error import UnauthenticatedRateLimitError, RateLimitError
 import speech_recognition as sr
 r = sr.Recognizer()
+from pydub import AudioSegment, silence
+import os
+import azure.cognitiveservices.speech as speechsdk
+
+
+
+import os
+recog=sr.Recognizer()
+final_result=""
 def pdf_to_documents(pdf_path):
+    
     """
     Converts a PDF to a list of 'documents' which are chunks of a larger document that can be easily searched
     and processed by the Cohere LLM. Each 'document' chunk is a dictionary with a 'title' and 'snippet' key
@@ -40,19 +50,13 @@ if hasattr(st, "secrets"):
 
 # Add a sidebar to the Streamlit app
 with st.sidebar:
-    with st.expander(label="llElevenLabs", expanded=False):
+    with st.expander(label="ElevenLabs TTS", expanded=False):
         st.caption(
             "The basic API has a limited number of characters. To increase this limit, you can get a free API key from [llElevenLabs](https://beta.elevenlabs.io/subscription)")
         API_KEY = st.text_input(label="API KEY")
-
-    st.title("Text to Voice")
-    english = st.radio(
-        label="Choose your language", options=['English', 'Multilingual'], index=0, horizontal=True)
-
-    value = "I am the machine." if english == 'English' else "बस बातें अपने जैसे करते है"
-    text = st.text_area(label="Enter the text here",
-                        value=value, max_chars=30 if not API_KEY else None)
-
+        client = ElevenLabs(
+            api_key=API_KEY,  # Defaults to ELEVEN_API_KEY or ELEVENLABS_API_KEY
+        )
     if api_key_found:
         cohere_api_key = st.secrets["COHERE_API_KEY"]
         # st.write("API key found.")
@@ -82,17 +86,74 @@ if "messages" not in st.session_state:
 for msg in st.session_state.messages:
     st.chat_message(msg["role"]).write(msg["text"])
 
+def recognize_from_microphone(audio):
+    # This example requires environment variables named "SPEECH_KEY" and "SPEECH_REGION"
+    speech_config = speechsdk.SpeechConfig(subscription=os.environ.get('SPEECH_KEY'), region=os.environ.get('SPEECH_REGION'))
+    speech_config.speech_recognition_language="en-US"
 
-audio_value = st.audio_input("Record a voice message")
+    audio_config = speechsdk.audio.AudioConfig(use_default_microphone=True)
+    speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
 
-if audio_value:
-    st.audio(audio_value)
-    try:
-        # for testing purposes, we're just using the default API key
-        # to use another API key, use `r.recognize_google(audio, key="GOOGLE_SPEECH_RECOGNITION_API_KEY")`
-        # instead of `r.recognize_google(audio)`
-        st.write("did you say:" + r.recognize_google(audio_value))
-    except sr.UnknownValueError:
-        st.write("wo bu keyi ting ni")
-    except sr.RequestError as e:
-        st.write("Could not request results from Google Speech Recognition service; {0}".format(e))
+    print("Speak into your microphone.")
+    speech_recognition_result = audio
+
+    if speech_recognition_result.reason == speechsdk.ResultReason.RecognizedSpeech:
+        print("Recognized: {}".format(speech_recognition_result.text))
+        return(speech_recognition_result.text)
+    elif speech_recognition_result.reason == speechsdk.ResultReason.NoMatch:
+        print("No speech could be recognized: {}".format(speech_recognition_result.no_match_details))
+        return("No speech could be recognized: {}".format(speech_recognition_result.no_match_details))
+    elif speech_recognition_result.reason == speechsdk.ResultReason.Canceled:
+        cancellation_details = speech_recognition_result.cancellation_details
+        print("Speech Recognition canceled: {}".format(cancellation_details.reason))
+        if cancellation_details.reason == speechsdk.CancellationReason.Error:
+            print("Error details: {}".format(cancellation_details.error_details))
+            print("Did you set the speech resource key and region values?")
+            return ("error Did you set the speech resource key and region values?")
+        else:
+            return ("Speech Recognition canceled: {}".format(cancellation_details.reason))
+
+
+def split():
+    audio_segment = AudioSegment.from_file(audio)
+    chunks = silence.split_on_silence(audio_segment, min_silence_len=500, silence_thresh=audio_segment.dBFS - 20,
+                                      keep_silence=100)
+    for index, chunk in enumerate(chunks):
+        chunk = chunk + 20
+        chunk.export(str(index) + ".wav", format="wav")
+        with sr.AudioFile(str(index) + ".wav") as source:
+            #recorded =
+            try:
+                text = recognize_from_microphone(recorded)
+                final_result = final_result + " " + text
+                print(text)
+            except:
+                print("None")
+                final_result = final_result + " Unaudible"
+audio = st.audio_input("Record a voice message")
+if audio:
+    st.audio(audio)
+    audio_segment = AudioSegment.from_file(audio)
+    chunks = silence.split_on_silence(audio_segment, min_silence_len=500, silence_thresh=audio_segment.dBFS - 20,
+                                      keep_silence=100)
+    for index, chunk in enumerate(chunks):
+        chunk = chunk + 20
+        chunk.export(str(index) + ".wav", format="wav")
+        with sr.AudioFile(str(index) + ".wav") as source:
+            try:
+                text = recognize_from_microphone(source)
+                final_result = final_result + " " + text
+                print(text)
+            except:
+                print("None")
+                final_result = final_result + " Unaudible"
+    with st.form("Result"):
+        result=st.text_area("TEXT", value=final_result)
+        d_btn=st.form_submit_button("Say it")
+        if d_btn:
+            audio = client.generate(
+                text=final_result,
+                voice="Brian",
+                model="eleven_multilingual_v2"
+            )
+            play(audio)
