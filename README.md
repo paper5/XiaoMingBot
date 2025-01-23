@@ -1,5 +1,7 @@
 # XiaoMingBot
-this bot is xiao ming, the man in your chinese class! talk with him to help
+Xiao Ming: Your Real-Time Chinese Language Partner and Study Buddy!
+
+This bot is xiao ming, the man in your chinese class! talk with him to help
 
 Meet Xiao Ming: Your Real-Time Chinese Language Partner and Study Buddy!
 
@@ -53,7 +55,7 @@ Whether you're preparing for exams, improving your conversational skills, or jus
 你准备好了吗？(Are you ready?) Let’s learn together! 😊
 
 
-Installation: 
+## Installation: 
 
 
    > pip install -r requirements.txt
