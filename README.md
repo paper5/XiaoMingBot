@@ -73,7 +73,12 @@ Installation:
    
    A new browser window will open where you can interact with the chatbot.
 
-> [!NOTE]
-> If you didn't paste a valid Cohere API key into your secrets file you will need to enter it into the sidebar for the chatbot to work.
+   > [!NOTE]
+   > If you didn't paste a valid Cohere API key into your secrets file you will need to enter it into the sidebar for the chatbot to work.
 
-5. Make minor changes to the code, save and then run your app again to see what happens.
+5. Add a valid Microsoft Azure Speech API Key into secrets.toml under the name SPEECH_KEY and SPEECH_REGION
+
+   > This is so Xiao Ming can hear you!
+   > 
+   > Go here for more information: https://shorturl.at/WE8Vu
+6. Make minor changes to the code, save and then run your app again to see what happens.

@@ -47,16 +47,22 @@ if hasattr(st, "secrets"):
     if "COHERE_API_KEY" in st.secrets.keys():
         if st.secrets["COHERE_API_KEY"] not in ["", "PASTE YOUR API KEY HERE"]:
             api_key_found = True
+    if "ElevenLabsKey" in st.secrets.keys():
+        if st.secrets["ElevenLabsKey"] not in ["", "PASTE YOUR API KEY HERE"]:
+            api_key_found1 = True
 
 # Add a sidebar to the Streamlit app
 with st.sidebar:
     with st.expander(label="ElevenLabs TTS", expanded=False):
         st.caption(
-            "The basic API has a limited number of characters. To increase this limit, you can get a free API key from [llElevenLabs](https://beta.elevenlabs.io/subscription)")
+            "NOTE: Not needed if you put the key in Secrets.toml under ElevenLabsKey. \n The basic API has a limited number of characters. To increase this limit, you can get a free API key from [llElevenLabs](https://beta.elevenlabs.io/subscription)")
         API_KEY = st.text_input(label="API KEY")
-        client = ElevenLabs(
-            api_key=API_KEY,  # Defaults to ELEVEN_API_KEY or ELEVENLABS_API_KEY
-        )
+        if api_key_found1:
+            client = ElevenLabs(api_key=st.secrets["ElevenLabsKey"])
+        else:
+            client = ElevenLabs(
+                api_key=API_KEY,  # Defaults to ELEVEN_API_KEY or ELEVENLABS_API_KEY
+            )
     if api_key_found:
         cohere_api_key = st.secrets["COHERE_API_KEY"]
         # st.write("API key found.")
@@ -88,14 +94,16 @@ for msg in st.session_state.messages:
 
 def recognize_from_microphone(audio):
     # This example requires environment variables named "SPEECH_KEY" and "SPEECH_REGION"
-    speech_config = speechsdk.SpeechConfig(subscription=os.environ.get('SPEECH_KEY'), region=os.environ.get('SPEECH_REGION'))
-    speech_config.speech_recognition_language="en-US"
+    speech_config = speechsdk.SpeechConfig(subscription=st.secrets.SPEECH_KEY, region=st.secrets.SPEECH_REGION)
+    speech_config.speech_recognition_language="zh-CN"
 
-    audio_config = speechsdk.audio.AudioConfig(use_default_microphone=True)
+    print("audio input:", audio)
+    #audio_config = speechsdk.audio.AudioConfig(filename=str(audio))
+    audio_config = speechsdk.audio.AudioConfig(filename=str(audio))
     speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
 
-    print("Speak into your microphone.")
-    speech_recognition_result = audio
+    print("Processing")
+    speech_recognition_result = speech_recognizer.recognize_once_async().get()
 
     if speech_recognition_result.reason == speechsdk.ResultReason.RecognizedSpeech:
         print("Recognized: {}".format(speech_recognition_result.text))
@@ -116,10 +124,8 @@ def recognize_from_microphone(audio):
 
 def split():
     audio_segment = AudioSegment.from_file(audio)
-    chunks = silence.split_on_silence(audio_segment, min_silence_len=500, silence_thresh=audio_segment.dBFS - 20,
-                                      keep_silence=100)
+    chunks = silence.split_on_silence(audio_segment, min_silence_len=500, silence_thresh=audio_segment.dBFS - 20, keep_silence=100)
     for index, chunk in enumerate(chunks):
-        chunk = chunk + 20
         chunk.export(str(index) + ".wav", format="wav")
         with sr.AudioFile(str(index) + ".wav") as source:
             #recorded =
@@ -137,23 +143,53 @@ if audio:
     chunks = silence.split_on_silence(audio_segment, min_silence_len=500, silence_thresh=audio_segment.dBFS - 20,
                                       keep_silence=100)
     for index, chunk in enumerate(chunks):
-        chunk = chunk + 20
         chunk.export(str(index) + ".wav", format="wav")
-        with sr.AudioFile(str(index) + ".wav") as source:
-            try:
-                text = recognize_from_microphone(source)
-                final_result = final_result + " " + text
-                print(text)
-            except:
-                print("None")
-                final_result = final_result + " Unaudible"
+        print(str(index) + ".wav")
+        text = recognize_from_microphone(str(index) + ".wav")
+        final_result = final_result + " " + text
+        print(text)
+
     with st.form("Result"):
         result=st.text_area("TEXT", value=final_result)
         d_btn=st.form_submit_button("Say it")
         if d_btn:
             audio = client.generate(
-                text=final_result,
+                text=result,
                 voice="Brian",
                 model="eleven_multilingual_v2"
             )
             play(audio)
+
+# Stop responding if the user has not added the Cohere API key
+if not cohere_api_key:
+    st.info("Please add your Cohere API key to continue.")
+    st.stop()
+
+# Create a connection to the Cohere API
+client = cohere.Client(api_key=cohere_api_key)
+
+preamble = """Your name is xiao ming, a chinese man who talks to people. You help people with their vocabulary"""
+prompt = result
+# Send the user message and pdf text to the model and capture the response
+response = client.chat(chat_history=st.session_state.messages,
+                       message=prompt,
+                       #documents=my_documents,
+                       prompt_truncation='AUTO',
+                       preamble=preamble)
+
+print("Promt = ", result)
+# Add the user prompt to the chat history
+st.session_state.messages.append({"role": "User", "text": prompt})
+# Add the response to the chat history
+st.session_state.messages.append({"role": "Chatbot", "text": msg})
+# Write the response to the chat window
+st.chat_message("Chatbot").write(msg)
+with st.chat_message("ai", avatar="XiaoMing.jpg"):
+    st.write(msg = response.text)
+    d_btn = st.button("Say it")
+    if d_btn:
+        audio = client.generate(
+            text=result,
+            voice="Brian",
+            model="eleven_multilingual_v2"
+        )
