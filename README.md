@@ -81,6 +81,12 @@ Whether you're preparing for exams, improving your conversational skills, or jus
 5. Add a valid Microsoft Azure Speech API Key into secrets.toml under the name SPEECH_KEY and SPEECH_REGION
 
    > This is so Xiao Ming can hear you!
-   > 
+   
+   It should be this:
+   ```
+    SPEECH_KEY = "(Api key)"
+    SPEECH_REGION = "(Region)"
+   ```
    > Go here for more information: https://shorturl.at/WE8Vu
+
 6. Make minor changes to the code, save and then run your app again to see what happens.
