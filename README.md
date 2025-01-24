@@ -89,4 +89,4 @@ Whether you're preparing for exams, improving your conversational skills, or jus
    ```
    > Go here for more information: https://shorturl.at/WE8Vu
 
-6. Make minor changes to the code, save and then run your app again to see what happens.
+6. Run the earlier command again to start the app. Enjoy!
