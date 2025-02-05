@@ -3,8 +3,6 @@ import cohere
 import fitz # An alias for the PyMuPDF library.
 from elevenlabs import *
 #from elevenlabs.api.error import UnauthenticatedRateLimitError, RateLimitError
-import speech_recognition as sr
-r = sr.Recognizer()
 from pydub import AudioSegment, silence
 import os
 import azure.cognitiveservices.speech as speechsdk
@@ -12,22 +10,9 @@ import azure.cognitiveservices.speech as speechsdk
 
 
 import os
-recog=sr.Recognizer()
+
 final_result=""
 def pdf_to_documents(pdf_path):
-    
-    """
-    Converts a PDF to a list of 'documents' which are chunks of a larger document that can be easily searched
-    and processed by the Cohere LLM. Each 'document' chunk is a dictionary with a 'title' and 'snippet' key
-
-    Args:
-        pdf_path (str): The path to the PDF file.
-
-    Returns:
-        list: A list of dictionaries representing the documents. Each dictionary has a 'title' and 'snippet' key.
-        Example return value: [{"title": "Page 1 Section 1", "snippet": "Text snippet..."}, ...]
-    """
-
     doc = fitz.open(pdf_path)
     documents = []
     text = ""
@@ -47,9 +32,12 @@ if hasattr(st, "secrets"):
     if "COHERE_API_KEY" in st.secrets.keys():
         if st.secrets["COHERE_API_KEY"] not in ["", "PASTE YOUR API KEY HERE"]:
             api_key_found = True
+            cohere_api_key = st.secrets["COHERE_API_KEY"]
     if "ElevenLabsKey" in st.secrets.keys():
         if st.secrets["ElevenLabsKey"] not in ["", "PASTE YOUR API KEY HERE"]:
             api_key_found1 = True
+
+
 
 # Add a sidebar to the Streamlit app
 with st.sidebar:
@@ -86,11 +74,56 @@ with st.sidebar:
 
 st.title("Xiao Ming Bot")
 st.write(f"Xiao ming is here to help!")
-if "messages" not in st.session_state:
-    st.session_state["messages"] = [{"role": "Chatbot",  "text": "Hi! I’m Xiao Ming, Your Chinese Study Buddy. \n Select your current Chinese level from the dropdown, then tell me what you’d like to practice—whether it’s speaking, vocabulary, or sentence structures. I’ll guide you through real-time conversations, help you master ETK words and phrases, and give you instant feedback to improve your skills. Let’s make learning Chinese fun and effective! \n 你准备好了吗？(Are you ready?) Let’s get started! 😊"}]
 
+
+coclient = cohere.Client(api_key=cohere_api_key)
+preamble = """Your name is xiao ming, a chinese man who talks to people. You have engaged in a conversation with the user. Answer normally and relatively short and ask something for the user, like a conversation."""
+text = "Hi! I’m Xiao Ming, Your Chinese Study Buddy. \n Select your current Chinese level from the dropdown, then tell me what you’d like to practice—whether it’s speaking, vocabulary, or sentence structures. I’ll guide you through real-time conversations, help you master ETK words and phrases, and give you instant feedback to improve your skills. Let’s make learning Chinese fun and effective! \n 你准备好了吗？(Are you ready?) Let’s get started! 😊"
+if "messages" not in st.session_state:
+    st.session_state["messages"] = [{"role": "Chatbot",  "text": text}]
 for msg in st.session_state.messages:
     st.chat_message(msg["role"]).write(msg["text"])
+
+def send(prompt):
+    #chat_history_str = "\n".join([msg["text"] for msg in st.session_state.messages])
+    print(prompt)
+    response = coclient.chat(
+        chat_history=st.session_state.messages,
+        message=prompt,
+        prompt_truncation='AUTO',
+        preamble=preamble
+    )
+    # print("Promt = ", result)
+    # Add the user prompt to the chat history
+    st.session_state.messages.append({"role": "User", "text": result})
+    # Add the response to the chat history
+    msg = response.text
+    st.session_state.messages.append({"role": "Chatbot", "text": msg})
+    # Write the response to the chat window
+    st.chat_message("Chatbot", avatar="XiaoMing.jpg").write(msg)
+    audio = client.generate(
+        text=msg,
+        voice="Brian",
+        model="eleven_multilingual_v2"
+    )
+    play(audio)
+
+    #st.write(response.text)
+    #print = response.text
+
+
+# prompt = result
+# Send the user message and pdf text to the model and capture the response
+
+with st.chat_message("ai", avatar="XiaoMing.jpg"):
+    d_btn = st.button("Say it")
+    if d_btn:
+        audio = client.generate(
+            text=text,
+            voice="Brian",
+            model="eleven_multilingual_v2"
+        )
+        play(audio)
 
 def recognize_from_microphone(audio):
     # This example requires environment variables named "SPEECH_KEY" and "SPEECH_REGION"
@@ -148,10 +181,10 @@ if audio:
         text = recognize_from_microphone(str(index) + ".wav")
         final_result = final_result + " " + text
         print(text)
-
+    result = ""
     with st.form("Result"):
         result=st.text_area("TEXT", value=final_result)
-        d_btn=st.form_submit_button("Say it")
+        d_btn=st.form_submit_button("Say it and send")
         if d_btn:
             audio = client.generate(
                 text=result,
@@ -159,6 +192,8 @@ if audio:
                 model="eleven_multilingual_v2"
             )
             play(audio)
+    send(result)
+
 
 # Stop responding if the user has not added the Cohere API key
 if not cohere_api_key:
@@ -166,30 +201,3 @@ if not cohere_api_key:
     st.stop()
 
 # Create a connection to the Cohere API
-client = cohere.Client(api_key=cohere_api_key)
-
-preamble = """Your name is xiao ming, a chinese man who talks to people. You help people with their vocabulary"""
-prompt = result
-# Send the user message and pdf text to the model and capture the response
-response = client.chat(chat_history=st.session_state.messages,
-                       message=prompt,
-                       #documents=my_documents,
-                       prompt_truncation='AUTO',
-                       preamble=preamble)
-
-print("Promt = ", result)
-# Add the user prompt to the chat history
-st.session_state.messages.append({"role": "User", "text": prompt})
-# Add the response to the chat history
-st.session_state.messages.append({"role": "Chatbot", "text": msg})
-# Write the response to the chat window
-st.chat_message("Chatbot").write(msg)
-with st.chat_message("ai", avatar="XiaoMing.jpg"):
-    st.write(msg = response.text)
-    d_btn = st.button("Say it")
-    if d_btn:
-        audio = client.generate(
-            text=result,
-            voice="Brian",
-            model="eleven_multilingual_v2"
-        )
