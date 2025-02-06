@@ -69,6 +69,13 @@ with st.sidebar:
     second_choice = st.selectbox("Chinese Unit", level_two_options[first_choice])
 
     st.write(f"Currently Selected: {second_choice}, in {first_choice}")
+    if second_choice == "Unit 2.2":
+        my_documents = pdf_to_documents('docs/L2.2 Learning Goals 逛夜市.pdf')
+    elif second_choice == "Unit 3.1":
+        my_documents = pdf_to_documents('docs/L3.1 Learning Targets.pdf'
+    else:
+        my_documents = pdf_to_documents('docs/L2.2 Learning Goals 逛夜市.pdf')
+
     st.image("XiaoMing.jpg", caption="Xiao Ming, Your friend!!! 😊😊")
 
 
@@ -77,7 +84,10 @@ st.write(f"Xiao ming is here to help!")
 
 
 coclient = cohere.Client(api_key=cohere_api_key)
-preamble = """Your name is xiao ming, a chinese man who talks to people. You have engaged in a conversation with the user. Answer normally and relatively short and ask something for the user, like a conversation."""
+preamble = """
+Your name is xiao ming, a chinese man who talks to people. You have engaged in a conversation with the user. Answer normally and relatively short and ask something for the user, like a conversation.
+The user, based on the unit, has goals based on the PDF. The user practices conversation with you, and you help them with their goals. These include ETK (Essential to Know) words and phrases, sentence structures, and vocabulary. Not only that, but the general topic per unit is also important.
+"""
 text = "Hi! I’m Xiao Ming, Your Chinese Study Buddy. \n Select your current Chinese level from the dropdown, then tell me what you’d like to practice—whether it’s speaking, vocabulary, or sentence structures. I’ll guide you through real-time conversations, help you master ETK words and phrases, and give you instant feedback to improve your skills. Let’s make learning Chinese fun and effective! \n 你准备好了吗？(Are you ready?) Let’s get started! 😊"
 if "messages" not in st.session_state:
     st.session_state["messages"] = [{"role": "Chatbot",  "text": text}]
