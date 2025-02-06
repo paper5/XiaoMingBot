@@ -8,39 +8,39 @@ Meet Xiao Ming: Your Real-Time Chinese Language Partner and Study Buddy!
 Xiao Ming is an advanced LLM-powered bot designed to help you master Chinese in a fun, interactive, and educational way. Whether you're a beginner or an advanced learner, Xiao Ming is here to guide you through the nuances of the language, with a special focus on school-related vocabulary, sentence structures, and ETK (Expected to Know) words!
 Key Features of Xiao Ming:
 
-    Real-Time Conversation Practice:
+Real-Time Conversation Practice:
 
-        Chat with Xiao Ming in real-time to improve your speaking and listening skills.
+     Chat with Xiao Ming in real-time to improve your speaking and listening skills.
 
-        Receive instant feedback on your pronunciation, grammar, and fluency.
+     Receive instant feedback on your pronunciation, grammar, and fluency.
 
-    ETK Vocabulary and Sentence Structures:
+ETK Vocabulary and Sentence Structures:
 
-        Xiao Ming incorporates Essential Terminology and Knowledge (ETK) into your conversations, helping you master the words and phrases commonly used in school settings.
+     Xiao Ming incorporates Expected to Know (ETK) words and phrases into your conversations, helping you master the words and phrases commonly used.
 
-        Learn how to construct sentences that are essential for exams, presentations, and everyday classroom interactions.
+     Learn how to construct sentences that are essential for exams, presentations, and everyday interactions.
 
-    Personalized Feedback:
+Personalized Feedback:
 
-        Xiao Ming analyzes your responses and provides tailored suggestions to improve your Chinese.
+     Xiao Ming analyzes your responses and provides tailored suggestions to improve your Chinese.
 
-        Whether it’s correcting tones, suggesting better word choices, or explaining grammar rules, Xiao Ming ensures you learn effectively.
+     Whether it’s correcting tones, suggesting better word choices, or explaining grammar rules, Xiao Ming ensures you learn effectively.
 
-    Interactive Learning:
+Interactive Learning:
 
-        Engage in role-playing scenarios like ordering food, asking for directions, or participating in a classroom discussion.
+     Engage in role-playing scenarios like ordering food, asking for directions, or participating in a classroom discussion.
 
-        Xiao Ming adapts to your skill level, making each conversation challenging yet achievable.
+     Xiao Ming adapts to your skill level, making each conversation challenging yet achievable.
 
-    Cultural Insights:
+Cultural Insights:
 
-        Beyond language, Xiao Ming shares cultural tips and context to help you understand the "why" behind certain phrases and expressions.
+     Beyond language, Xiao Ming shares cultural tips and context to help you understand the "why" behind certain phrases and expressions.
 
-    Progress Tracking:
+Progress Tracking:
 
-        Track your improvement over time with Xiao Ming’s built-in progress reports.
+     Track your improvement over time with Xiao Ming’s built-in progress reports.
 
-        Set goals and celebrate milestones as you become more confident in your Chinese skills.
+     Set goals and celebrate milestones as you become more confident in your Chinese skills.
 
 Why Choose Xiao Ming?
 
@@ -88,5 +88,20 @@ Whether you're preparing for exams, improving your conversational skills, or jus
     SPEECH_REGION = "(Region)"
    ```
    > Go here for more information: https://shorturl.at/WE8Vu
+   6. Change the pdf directory
 
-6. Run the earlier command again to start the app. Enjoy!
+   >    Add PDF to the docs folder
+
+   >    Change the pdf in the chatbot.py file to the name of the pdf file you want to use.
+
+   ```
+   if second_choice == "Unit 2.2":
+        my_documents = pdf_to_documents('docs/L2.2 Learning Goals 逛夜市.pdf')  <<< Change here
+   elif second_choice == "Unit 3.1":
+        my_documents = pdf_to_documents('docs/L3.1 Learning Targets.pdf')  <<< Change here
+   else:
+        my_documents = pdf_to_documents('docs/L2.2 Learning Goals 逛夜市.pdf') <<< Change here
+
+
+   ```
+7. Run the earlier command again to start the app. Enjoy!
