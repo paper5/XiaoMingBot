@@ -69,10 +69,11 @@ with st.sidebar:
     second_choice = st.selectbox("Chinese Unit", level_two_options[first_choice])
 
     st.write(f"Currently Selected: {second_choice}, in {first_choice}")
+
     if second_choice == "Unit 2.2":
         my_documents = pdf_to_documents('docs/L2.2 Learning Goals 逛夜市.pdf')
     elif second_choice == "Unit 3.1":
-        my_documents = pdf_to_documents('docs/L3.1 Learning Targets.pdf'
+        my_documents = pdf_to_documents('docs/L3.1 Learning Targets.pdf')
     else:
         my_documents = pdf_to_documents('docs/L2.2 Learning Goals 逛夜市.pdf')
 
@@ -94,12 +95,13 @@ if "messages" not in st.session_state:
 for msg in st.session_state.messages:
     st.chat_message(msg["role"]).write(msg["text"])
 
-def send(prompt):
+def send(prompt, document):
     #chat_history_str = "\n".join([msg["text"] for msg in st.session_state.messages])
     print(prompt)
     response = coclient.chat(
         chat_history=st.session_state.messages,
         message=prompt,
+        documents=document,
         prompt_truncation='AUTO',
         preamble=preamble
     )
@@ -202,7 +204,8 @@ if audio:
                 model="eleven_multilingual_v2"
             )
             play(audio)
-    send(result)
+
+    send(result, my_documents)
 
 
 # Stop responding if the user has not added the Cohere API key
